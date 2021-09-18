@@ -1,8 +1,13 @@
 
 #include "console.hpp"
 
+#include "helpers.hpp"
+
 namespace Console
 {
+
+    const StandaloneCommand empty_command = {nullptr, nullptr};
+
     ReturnCode Run(IOBuffer& input, IOBuffer& output)
     {
         /* Input buffer data is consumed in the operation */
@@ -25,11 +30,25 @@ namespace Console
         return ReturnCode::Success;
     }
 
+    bool RegisterNewCommand(StandaloneCommand newcommand)
+    {
+        for (auto i = 0; i < Options::BuiltinCommandsSize; ++i)
+        {
+            auto& cmd = builtin_commands[i];
+            if (not cmd.name)
+            {
+                cmd = newcommand;
+                return true;
+            }
+        }
+        return false;
+    }
+
     StandaloneCommand builtin_commands[Options::BuiltinCommandsSize + 1] =
     {
         {"help", Help},
         {"echo", Run},
-        {nullptr, nullptr},
+        empty_command,
     };
 
 } /* namespace Console */
