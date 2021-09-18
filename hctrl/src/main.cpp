@@ -8,9 +8,15 @@
 #include <console.hpp>
 
 
-auto lcd = Nokia5110(SPI, Pin(PA4), Pin(PA6), Pin(PB0));
-auto console = Console::Console(Serial1);
+auto spi1 = SPIClass(PA7, PA6, PA5, PA4);
 
+auto lcd = Nokia5110::Nokia5110(spi1, Pin(PA4), Pin(PA6), Pin(PB0));
+
+
+Console::ReturnCode LcdWrite(Console::IOBuffer& input, Console::IOBuffer& output)
+{
+    return Console::ReturnCode::Success;
+}
 
 
 void blink(uint32_t mils)
@@ -29,14 +35,16 @@ void blink(uint32_t mils)
 }
 
 
+auto console = Console::Console(Serial1);
+
+
 void setup()
 {
     pinMode(PC13, OUTPUT);
     console.Init(115200);
-
-    // lcd.Init();
+    lcd.Init();
+    Console::RegisterNewCommand({"lcdwrite", LcdWrite});
 }
-
 
 void loop()
 {

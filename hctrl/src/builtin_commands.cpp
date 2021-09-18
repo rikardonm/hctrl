@@ -30,6 +30,12 @@ namespace Console
         return ReturnCode::Success;
     }
 
+    ReturnCode Reset(IOBuffer& input, IOBuffer& output)
+    {
+        HAL_NVIC_SystemReset();
+        return ReturnCode::Success;
+    }
+
     bool RegisterNewCommand(StandaloneCommand newcommand)
     {
         for (auto i = 0; i < Options::BuiltinCommandsSize; ++i)
@@ -48,6 +54,7 @@ namespace Console
     {
         {"help", Help},
         {"echo", Run},
+        {"reset", Reset},
         empty_command,
     };
 
