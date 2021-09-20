@@ -10,7 +10,7 @@
 
 #include <cstdint>
 #include <SPI.h>
-#include "gpio.hpp"
+#include <gpio/gpio.hpp>
 
 namespace Nokia5110
 {
@@ -45,11 +45,29 @@ namespace Nokia5110
     class Nokia5110
     {
     public:
-        Nokia5110(SPIClass& spi, Pin ssn, Pin data_command, Pin reset);
+        Nokia5110(SPIClass& spi, Pin& ssn, Pin& data_command, Pin& reset);
         void Init(void);
         void Char(char mychar);
         void String(const char* src);
-        void Pos(uint8_t x, uint8_t y);
+
+        template<typename T>
+        void Number(const T number);
+
+        /**
+         * @brief Set the cursor position in the LCD
+         *
+         * @param x Coordinate from screen's left border, in pixels
+         * @param y Coordinate from screen's top border, in rows
+         */
+        void Position(uint8_t x, uint8_t y);
+
+        void CharPosition(uint8_t x, uint8_t y);
+
+        /**
+         * @brief Clear LCD contents.
+         *
+         */
+        void Clear();
 
         void AdjustForTemperature(uint8_t temp_c);
         void AdjustForPowerMode(uint8_t power_mode);
@@ -57,9 +75,9 @@ namespace Nokia5110
 
     private:
         SPIClass& _spi;
-        Pin _ssn;
-        Pin _resetn;
-        Pin _data_commandn;
+        Pin& _ssn;
+        Pin& _resetn;
+        Pin& _data_commandn;
         bool _initd;
 
         /* Commands */
@@ -75,9 +93,18 @@ namespace Nokia5110
 
         void _Char(uint8_t mychar);
         void _String(const char* src);
+        void _Clear();
     };
 
     void reverse(char s[]);
-    void myitoa(unsigned int n, char s[]);
+    void myitoa(unsigned int n, char s[], bool leading_zeros = false);
+
+    extern template void Nokia5110::Number(const int8_t number);
+    extern template void Nokia5110::Number(const uint8_t number);
+    extern template void Nokia5110::Number(const int16_t number);
+    extern template void Nokia5110::Number(const uint16_t number);
+    extern template void Nokia5110::Number(const int32_t number);
+    extern template void Nokia5110::Number(const uint32_t number);
+    extern template void Nokia5110::Number(const size_t number);
 
 }

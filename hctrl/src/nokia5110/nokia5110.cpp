@@ -8,6 +8,8 @@
 #include "nokia5110.hpp"
 #include "nokia5110_typefaces.hpp"
 
+#include <cstdlib>
+
 
 namespace Nokia5110
 {
@@ -33,7 +35,7 @@ namespace Nokia5110
     class TransactionManager
     {
     public:
-        TransactionManager(Pin ssn, Pin data_commandn, bool is_data)
+        TransactionManager(Pin& ssn, Pin& data_commandn, bool is_data)
         : _ssn(ssn), _data_commandn(data_commandn)
         {
             _ssn.Set(false);
@@ -63,7 +65,7 @@ namespace Nokia5110
         Pin& _data_commandn;
     };
 
-    Nokia5110::Nokia5110(SPIClass& spi, Pin ssn, Pin data_commandn, Pin reset)
+    Nokia5110::Nokia5110(SPIClass& spi, Pin& ssn, Pin& data_commandn, Pin& reset)
     : _spi(spi), _ssn(ssn), _resetn(reset), _data_commandn(data_commandn), _initd(false)
     {
     }
@@ -100,12 +102,12 @@ namespace Nokia5110
         _spi.transfer(DisplayControl(DisplayModes::Normal));
         _spi.transfer(BiasSystem(4));
 
+        mgr.Command();
+        _spi.transfer(SetXAddress(0));
+        _spi.transfer(SetYAddress(0));
+
         mgr.Data();
-        /* Clean the LCD  - 8 bits at a time */
-        for (auto i = 0; i < (48 * 84 / 8); ++i)
-        {
-            _spi.transfer(0x00);
-        }
+        _Clear();
 
         mgr.Command();
         _spi.transfer(SetXAddress(0));
@@ -142,12 +144,61 @@ namespace Nokia5110
         _String(src);
     }
 
-    void Nokia5110::Pos(uint8_t x, uint8_t y)
+    template<typename T>
+    void Nokia5110::Number(const T number)
+    {
+        const auto length = (sizeof(T) * 8) + 1;
+        char output[length];
+        itoa(number, output, 10);
+        String(output);
+    }
+
+    template void Nokia5110::Number(const int8_t number);
+    template void Nokia5110::Number(const uint8_t number);
+    template void Nokia5110::Number(const int16_t number);
+    template void Nokia5110::Number(const uint16_t number);
+    template void Nokia5110::Number(const int32_t number);
+    template void Nokia5110::Number(const uint32_t number);
+    template void Nokia5110::Number(const size_t number);
+
+    void Nokia5110::Position(uint8_t x, uint8_t y)
     {
         auto mgr = TransactionManager(_ssn, _data_commandn, false);
         _spi.transfer(SetXAddress(x));
         _spi.transfer(SetYAddress(y));
     }
+
+    void Nokia5110::CharPosition(uint8_t x, uint8_t y)
+    {
+        Position(x * (Typeface::OriginalCopy::CharWidth + 1), y);
+    }
+
+    void Nokia5110::Clear()
+    {
+        auto mgr = TransactionManager(_ssn, _data_commandn, false);
+        _spi.transfer(SetXAddress(0));
+        _spi.transfer(SetYAddress(0));
+        mgr.Data();
+        _Clear();
+    }
+
+    void Nokia5110::AdjustForTemperature(uint8_t temp_c)
+    {
+        /* Although the LCD driver has temperature compensation, it this feature chooses the automatic compensation
+         * curve, and is not direclty dependant on the current temperature. */
+        return;
+    }
+
+    void Nokia5110::AdjustForPowerMode(uint8_t power_mode)
+    {
+        return;
+    }
+
+    void Nokia5110::AdjustForSupplyVoltage(uint8_t voltage)
+    {
+        return;
+    }
+
 
     constexpr uint8_t Nokia5110::FunctionSet(PowerDownControl power_down, AddressingMode entry_mode, InstructionSetChoice instruction_set)
     {
@@ -219,6 +270,15 @@ namespace Nokia5110
         }
     }
 
+    void Nokia5110::_Clear()
+    {
+        /* Clean the LCD  - 8 bits at a time */
+        for (auto i = 0; i < (48 * 84 / 8); ++i)
+        {
+            _spi.transfer(0x00);
+        }
+    }
+
 
     /* reverse:  reverse string s in place */
     void reverse(char s[])
@@ -231,21 +291,6 @@ namespace Nokia5110
             s[i] = s[j];
             s[j] = c;
         }
-    }
-
-    /* itoa:  convert n to characters in s */
-    void myitoa(unsigned int n, char s[])
-    {
-        int i;
-        i = 0;
-        do
-        /* generate digits in reverse order */
-        {
-            s[i++] = n % 10 + '0';   /* get next digit */
-        } while ((n /= 10) > 0);     /* delete it */
-
-        s[i] = '\0';
-        reverse(s);
     }
 
 }

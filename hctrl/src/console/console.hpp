@@ -4,9 +4,9 @@
 
 #include <Arduino.h>
 
-#include <circular_buffer.hpp>
+#include <general/circular_buffer.hpp>
 
-#include "options.hpp"
+#include <console/options.hpp>
 
 
 namespace Console

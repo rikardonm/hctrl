@@ -1,8 +1,7 @@
 #include "console.hpp"
 
-#include "helpers.hpp"
-
-#include "ascii.hpp"
+#include <general/helpers.hpp>
+#include <general/ascii.hpp>
 
 
 const char* ascii_icon[16] = {

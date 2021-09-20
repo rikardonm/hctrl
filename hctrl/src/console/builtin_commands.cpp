@@ -1,7 +1,6 @@
-
 #include "console.hpp"
 
-#include "helpers.hpp"
+#include <general/helpers.hpp>
 
 namespace Console
 {
