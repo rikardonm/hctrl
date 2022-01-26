@@ -8,64 +8,109 @@
 
 namespace RotaryEncoder
 {
-    RotaryEncoder::RotaryEncoder(Pin& sw, Pin& dt, Pin& clk, uint32_t& clicked, int32_t& rotations)
+
+    enum : types::CallbackId_t
+    {
+        SwitchId,
+        ClockId,
+        DirectionId,
+    };
+
+    RotaryEncoder::RotaryEncoder(types::GPIO::Pin& sw, types::GPIO::Pin& dt, types::GPIO::Pin& clk)
     : _sw(sw), _dt(dt), _clk(clk),
     _sw_backoff(Options::ClickBackoff), _dt_bakcoff(Options::RotateBackoff), _clk_backoff(Options::RotateBackoff),
-    _dt_last(false), _clk_last(false),
-    _clicked(clicked), _rotations(rotations)
+    _dt_last(false), _clk_last(false)
     {
     }
 
-    void RotaryEncoder::Init()
+    void RotaryEncoder::Init(bool invert)
     {
-        _sw.Configure(true, true);
-        _clk.Configure(true, false);
-        _dt.Configure(true, false);
-
-        attachInterrupt(digitalPinToInterrupt(_sw.Number()), EncoderClick, RISING);
-        attachInterrupt(digitalPinToInterrupt(_clk.Number()), EncoderClock, CHANGE);
-        attachInterrupt(digitalPinToInterrupt(_dt.Number()), EncoderDirection, CHANGE);
-    }
-
-    void EncoderClick(void)
-    {
-        if (not encoder._sw_backoff.Mark(millis()))
+        namespace IO = types::GPIO;
+        auto io_opt = IO::Options(IO::Direction::Input, IO::PullResistor::Up);
+        auto isr_opt = IO::IsrOptions(IO::InterruptMode::Rising, SwitchId, _callbacks);
+        _sw.Configure(io_opt, isr_opt);
+        if (invert)
         {
-            return;
-        }
-        ++encoder._clicked;
-    }
-
-    void EncoderClock(void)
-    {
-        auto now = millis();
-        if (not encoder._clk_backoff.Mark(millis()))
-        {
-            return;
-        }
-
-        /* criss-cross buffering */
-        encoder._dt_last = encoder._dt.Read();
-
-        bool decrement = encoder._clk_last ^ encoder._dt_last;
-
-        if (decrement)
-        {
-            --encoder._rotations;
+            isr_opt.id = ClockId;
+            _clk.Configure(io_opt, isr_opt);
+            isr_opt.id = DirectionId;
+            _dt.Configure(io_opt, isr_opt);
         }
         else
         {
-            ++encoder._rotations;
+            isr_opt.id = DirectionId;
+            _clk.Configure(io_opt, isr_opt);
+            isr_opt.id = ClockId;
+            _dt.Configure(io_opt, isr_opt);
         }
     }
 
-    void EncoderDirection(void)
+    bool RotaryEncoder::Configure(Callback& user_hook)
     {
-        if (not encoder._dt_bakcoff.Mark(millis()))
+        _user_callbacks = &user_hook;
+        return true;
+    }
+
+    void RotaryEncoder::EncoderSwitch()
+    {
+        if (not _sw_backoff.Mark(millis()))
+        {
+            return;
+        }
+        if (not _user_callbacks)
+        {
+            return;
+        }
+        _user_callbacks->Click(_sw_backoff.Elapsed());
+    }
+
+    void RotaryEncoder::EncoderClock()
+    {
+        auto now = millis();
+        if (not _clk_backoff.Mark(millis()))
+        {
+            return;
+        }
+
+        /* criss-cross buffering */
+        _dt_last = _dt.Read();
+
+        bool decrement = _clk_last ^ _dt_last;
+
+        if (not _user_callbacks)
+        {
+            return;
+        }
+
+        _user_callbacks->Rotation(_clk_backoff.Elapsed(), not decrement);
+    }
+
+    void RotaryEncoder::EncoderDirection()
+    {
+        if (not _dt_bakcoff.Mark(millis()))
         {
             return;
         }
         /* criss-cross buffering */
-        encoder._clk_last = encoder._clk.Read();
+        _clk_last = _clk.Read();
     }
-}
+
+    void RotaryEncoder::CallbackHook::Interrupt(types::CallbackId_t id)
+    {
+        switch(id)
+        {
+            case SwitchId:
+                object.EncoderSwitch();
+                break;
+            case ClockId:
+                object.EncoderClock();
+                break;
+            case DirectionId:
+                object.EncoderDirection();
+                break;
+            default:
+                break;
+        };
+    }
+
+} /* namespace RotaryEncoder */

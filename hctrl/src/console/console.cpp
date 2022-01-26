@@ -119,6 +119,7 @@ namespace Console
         auto charin = _serial.read();
         if (charin < 0)
         {
+            FlushOutput();
             return;
         }
         switch(charin)
@@ -160,6 +161,11 @@ namespace Console
                 break;
         }
         FlushOutput();
+    }
+
+    IOBuffer& Console::StdOut()
+    {
+        return _output_buffer;
     }
 
     void Console::PrintControlCode(char code)

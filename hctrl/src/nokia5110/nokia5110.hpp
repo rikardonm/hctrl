@@ -9,8 +9,12 @@
 #pragma once
 
 #include <cstdint>
-#include <SPI.h>
-#include <gpio/gpio.hpp>
+#include <memory>
+
+#include <types/gpio/gpio.hpp>
+
+#include <types/spi/spi.hpp>
+
 
 namespace Nokia5110
 {
@@ -40,18 +44,57 @@ namespace Nokia5110
         Extended = 0x01,
     };
 
-
+    namespace Parameters
+    {
+        const uint32_t XPixels = 84;
+        const uint32_t YPixels = 48;
+        const uint32_t YBanks = 6;
+    }
 
     class Nokia5110
     {
     public:
-        Nokia5110(SPIClass& spi, Pin& ssn, Pin& data_command, Pin& reset);
-        void Init(void);
+        Nokia5110(
+            types::SPI::SPI& spi,
+            types::GPIO::Pin& ssn,
+            types::GPIO::Pin& data_commandn,
+            types::GPIO::Pin& reset
+        );
+
+        bool Init();
+
         void Char(char mychar);
+        Nokia5110& operator<<(char mychar);
+
         void String(const char* src);
+        Nokia5110& operator<<(const char* src);
+
+        /**
+         * @brief Add empty spaces to end of line in LCD.
+         *
+         * @pre
+         * @post
+         */
+        void PadLine();
+
+        /**
+         * @brief Invert pixel values when writing to LCD.
+         *
+         * @pre
+         * @post
+         * @param value Enable or disables pixel color inversion.
+         */
+        void Invert(bool value);
 
         template<typename T>
         void Number(const T number);
+        Nokia5110& operator<<(const int8_t number);
+        Nokia5110& operator<<(const uint8_t number);
+        Nokia5110& operator<<(const int16_t number);
+        Nokia5110& operator<<(const uint16_t number);
+        Nokia5110& operator<<(const int32_t number);
+        Nokia5110& operator<<(const uint32_t number);
+        Nokia5110& operator<<(const size_t number);
 
         /**
          * @brief Set the cursor position in the LCD
@@ -69,16 +112,23 @@ namespace Nokia5110
          */
         void Clear();
 
+        void Flush(bool pad);
+
         void AdjustForTemperature(uint8_t temp_c);
         void AdjustForPowerMode(uint8_t power_mode);
         void AdjustForSupplyVoltage(uint8_t voltage);
 
     private:
-        SPIClass& _spi;
-        Pin& _ssn;
-        Pin& _resetn;
-        Pin& _data_commandn;
+        /* Hardware handles */
+        types::SPI::SPI& _spi;
+        types::GPIO::Pin& _ssn;
+        types::GPIO::Pin& _resetn;
+        types::GPIO::Pin& _data_commandn;
+        /* State variables */
         bool _initd;
+        size_t _runner;
+        types::Array<uint8_t, Parameters::XPixels * Parameters::YBanks> _buffer;
+        bool _invert;
 
         /* Commands */
         constexpr uint8_t FunctionSet(PowerDownControl power_down, AddressingMode entry_mode, InstructionSetChoice instruction_set);
@@ -91,13 +141,8 @@ namespace Nokia5110
         constexpr uint8_t BiasSystem(uint8_t value);
         constexpr uint8_t Vop(uint8_t value);
 
-        void _Char(uint8_t mychar);
-        void _String(const char* src);
-        void _Clear();
+        void _PushToBuffer(const uint8_t value);
     };
-
-    void reverse(char s[]);
-    void myitoa(unsigned int n, char s[], bool leading_zeros = false);
 
     extern template void Nokia5110::Number(const int8_t number);
     extern template void Nokia5110::Number(const uint8_t number);

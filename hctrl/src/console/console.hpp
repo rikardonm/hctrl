@@ -73,6 +73,8 @@ namespace Console
     enum class ReturnCode
     {
         Success = 0x00,
+        Unknown = 0x01,
+        Timeout = 0x02,
     };
 
 
@@ -114,6 +116,8 @@ namespace Console
          * @param mils
          */
         void EventLoopStep(uint32_t mils);
+
+        IOBuffer& StdOut();
 
     private:
         HardwareSerial& _serial;

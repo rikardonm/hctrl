@@ -1,3 +1,6 @@
+#pragma once
+
+
 #include <cstdint>
 #include <cstring>
 #include <cstdlib>
@@ -91,9 +94,13 @@ public:
         return not (*this == other);
     }
 
-    void operator=(const _Base& other)
+    _Base& operator=(const _Base& other)
     {
-        _cursor = other._cursor;
+        if (other != *this)
+        {
+            _cursor = other._cursor;
+        }
+        return *this;
     }
 
     /**
@@ -205,10 +212,11 @@ protected:
 
 
 /**
- * @brief Templated circular buffer implementation with scan/edit cursor
+ * @brief Template for a circular buffer implementation with scan/edit cursor
  *
  *
- * Data is pushed (stored) and read back (pop) from left to right, wrapping around the SIZE boundary.
+ * Data is pushed (stored) and read back (pop) from from left (lower address) to right (higher address),
+ *  wrapping around the SIZE boundary.
  *
  *
  * State 1: write cursor is in front of read cursor; data is contiguous
@@ -562,6 +570,5 @@ private:
 
     /* Declare sibling classes as friends */
     template<typename, size_t, bool> friend class CircularBuffer;
-
 
 };
