@@ -9,12 +9,13 @@ namespace SPI
 
     bool SPI::SetOptions(const Options options)
     {
+        _options = options;
         return ApplyOptions();
     }
 
     Options SPI::GetOptions()
     {
-        return options;
+        return _options;
     }
 
 } /* namespace SPI */

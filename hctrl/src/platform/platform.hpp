@@ -26,8 +26,10 @@ namespace platform
     void Callback_pin_6(void);
     extern types::platforms::arduino::Pin pin_7;
     void Callback_pin_7(void);
+    // USB DP
     extern types::platforms::arduino::Pin pin_8;
     void Callback_pin_8(void);
+    // USB DN
     extern types::platforms::arduino::Pin pin_9;
     void Callback_pin_9(void);
     extern types::platforms::arduino::Pin pin_10;
@@ -55,10 +57,13 @@ namespace platform
     void Callback_pin_30(void);
     extern types::platforms::arduino::Pin pin_31;
     void Callback_pin_31(void);
+    // BOOT 1
     extern types::platforms::arduino::Pin pin_32;
     void Callback_pin_32(void);
+    // SWDIO
     extern types::platforms::arduino::Pin pin_33;
     void Callback_pin_33(void);
+    // SWDCLK
     extern types::platforms::arduino::Pin pin_34;
     void Callback_pin_34(void);
 

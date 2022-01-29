@@ -1,19 +1,9 @@
-#include <variant_BLUEPILL_F103C6.h>
-#include <stm32f103x6.h>
+// #include <variant_BLUEPILL_F103C6.h>
+// #include <stm32f103x6.h>
 
-#include <Arduino.h>
+// #include <Arduino.h>
 
 #include <cstdint>
-
-#include <HardwareSerial.h>
-#include <SPI.h>
-#include <WInterrupts.h>
-
-#include <types/gpio/gpio.hpp>
-
-#include <nokia5110/nokia5110.hpp>
-#include <console/console.hpp>
-#include <rotary_encoder/rotary_encoder.hpp>
 
 #include <general/circular_buffer.hpp>
 #include <general/fifo.hpp>
@@ -29,10 +19,9 @@
 
 
 auto lcd_backoff = TimedBackoff(50);
+const auto splash_screen_delay = 1000;
 
-auto console = Console::Console(Serial1);
-
-auto blinky = Blinky(BSP::status_led, 500);
+auto blinky = Blinky(*BSP::status_led, 500);
 
 
 enum class MessageType
@@ -68,16 +57,25 @@ struct ApplicationState
 
 
 
-struct Application
+class Application
 {
+public:
     Application()
         : events(),
         state(),
         _selector(*this, BSP::selector),
-        fav({{0x01, BSP::favorite1}, {0x02, BSP::favorite2}, {0x03, BSP::favorite3}})
+        fav({{0x01, *BSP::favorite1}, {0x02, *BSP::favorite2}, {0x03, *BSP::favorite3}})
     {}
     bool Init();
 
+
+    CircularBuffer<Message, 16, false> events;
+    ApplicationState state;
+    /* HMI */
+    Selector _selector;
+    Favorite fav[3];
+
+private:
     /* Rotary Encoder Menu Selector */
     struct Selector : public RotaryEncoder::Callback
     {
@@ -112,12 +110,6 @@ struct Application
         TimedBackoff backoff;
         types::GPIO::Pin& pin;
     };
-
-    CircularBuffer<Message, 16, false> events;
-    ApplicationState state;
-    Selector _selector;
-    Favorite fav[3];
-
 };
 
 Application app;
@@ -298,8 +290,8 @@ void Home::ProcessMessage(uint32_t timestamp, Message msg)
                 case 1:
                 case 2:
                     app.state.desired_height = app.state.favorites[msg.favorite_id];
-                    console.StdOut() << "Favorite " << '0' + msg.favorite_id << " pressed.";
-                    console.StdOut().InsertNewLine();
+                    BSP::console.StdOut() << "Favorite " << '0' + msg.favorite_id << " pressed.";
+                    BSP::console.StdOut().InsertNewLine();
                     break;
                 default:
                     break;
@@ -340,13 +332,9 @@ void Home::UpdateOutput(uint32_t timestamp, OutputTypes output_type, uint32_t ou
 
 void setup()
 {
-    const auto splash_screen_delay = 1000;
-
     BSP::Init();
 
-    const auto uart_baud = 115200;
-    console.Init(uart_baud);
-    Console::RegisterNewCommand(SetFavoriteCommand);
+    // Console::RegisterNewCommand(SetFavoriteCommand);
 
     app.Init();
 
@@ -360,12 +348,12 @@ void loop()
 {
     auto mils = millis();
     blinky.EventLoopStep(mils);
-    console.EventLoopStep(mils);
-    auto [success, value] = app.events.Pop();
-    if (success)
-    {
-        current_state.ProcessMessage(mils, value);
-    }
+    BSP::console.EventLoopStep(mils);
+    // auto [success, value] = app.events.Pop();
+    // if (success)
+    // {
+    //     current_state.ProcessMessage(mils, value);
+    // }
     if (lcd_backoff.Mark(mils))
     {
         current_state.UpdateOutput(mils, OutputTypes::Nokia5110, 0);

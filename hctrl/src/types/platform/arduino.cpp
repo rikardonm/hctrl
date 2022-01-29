@@ -107,6 +107,7 @@ namespace arduino
 
     void SPI::Transfer(uint8_t data)
     {
+        _instance.transfer(data);
     }
 
     void SPI::Transfer(iArray<uint8_t> data)
@@ -122,9 +123,10 @@ namespace arduino
     bool SPI::ApplyOptions()
     {
         _instance.begin();
-        _instance.setBitOrder(MSBFIRST);
+        _instance.setBitOrder(_options.bit_order == types::SPI::BitOrder::MSBFirst ?  MSBFIRST : LSBFIRST);
         _instance.setDataMode(SPI_MODE0);
-        // _spi.setClockDivider(SPI_CLOCK_DIV64);
+        // TODO: how do we calculate the divider?
+        _instance.setClockDivider(SPI_CLOCK_DIV64);
         return true;
     }
 

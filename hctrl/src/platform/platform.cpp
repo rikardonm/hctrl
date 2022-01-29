@@ -187,52 +187,11 @@ namespace platform
         pin_0xC9.Callback();
     }
 
-    // case 1:     return portb[8];
-    // case 0:     return portb[9];
-    // case 2:     return portb[7];
-    // case 3:     return portb[6];
-    // case 4:     return portb[5];
-    // case 5:     return portb[4];
-    // case 6:     return portb[3];
-
-    // case 7:     return porta[15];
-    // case 8:     return porta[12];   // usb dp
-    // case 9:     return porta[11];   // usb dm
-    // case 10:    return porta[10];
-    // case 11:    return porta[9];
-    // case 12:    return porta[8];
-
-    // case 13:    return portb[15];
-    // case 14:    return portb[14];
-    // case 15:    return portb[13];
-    // case 16:    return portb[12];
-
-    // case 17:    return portc[0];
-    // case 18:    return portc[1];
-    // case 19:    return portc[2];
-
-    // case 30:    return portb[10];
-    // case 31:    return portb[11];
-    // case 32:    return portb[2];    // boot 1
-    // case 33:    return porta[13];   // swdio
-    // case 34:    return porta[14];   // swclk
-
-    // case 0xC0:  return porta[0];
-    // case 0xC1:  return porta[1];
-    // case 0xC2:  return porta[2];
-    // case 0xC3:  return porta[3];
-    // case 0xC4:  return porta[4];
-    // case 0xC5:  return porta[5];
-    // case 0xC6:  return porta[6];
-    // case 0xC7:  return porta[7];
-    // case 0xC8:  return portb[0];
-    // case 0xC9:  return portb[1];
-
 
     /**************************************************************************
      *                  SPI
      *************************************************************************/
     /* Platform objects must be declared/instantiated here */
-    types::platforms::arduino::SPI spi_1 = types::platforms::arduino::SPI(SPIClass());
+    types::platforms::arduino::SPI spi_1 = types::platforms::arduino::SPI(SPI);
 
 }

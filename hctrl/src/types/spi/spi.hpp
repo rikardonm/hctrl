@@ -78,7 +78,7 @@ namespace SPI
         virtual bool ApplyOptions() = 0;
 
         /* Options is private as if the user changes it, the block is made aware of it */
-        Options options;
+        Options _options;
     };
 
 } /* namespace SPI */

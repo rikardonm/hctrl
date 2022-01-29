@@ -56,7 +56,7 @@ namespace arduino
     class SPI : public types::SPI::SPI
     {
     public:
-        SPI(SPIClass&& instance) : _instance(instance) {}
+        SPI(SPIClass& instance) : _instance(instance) {}
 
         virtual bool Init(const types::SPI::Options options) override;
         virtual void Transfer(uint8_t data) override;
@@ -68,7 +68,7 @@ namespace arduino
 
     private:
         /* Store Arduino's instance */
-        SPIClass _instance;
+        SPIClass& _instance;
     };
 
 } /* namespace arduino */
