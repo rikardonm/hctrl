@@ -1,8 +1,7 @@
-
 #pragma once
 
-#include <types/gpio/gpio.hpp>
-#include <types/spi/spi.hpp>
+#include <types/hal/gpio/gpio.hpp>
+#include <types/hal/spi/spi.hpp>
 
 #include <Arduino.h>
 #include <SPI.h>
@@ -26,19 +25,24 @@ namespace arduino
             _callback(callback)
         {}
 
-        virtual bool Init(const types::GPIO::Options options) override;
-        virtual bool Configure(const types::GPIO::Options options) override;
-        virtual bool Configure(const types::GPIO::IsrOptions isr_options) override;
-        virtual bool Configure(const types::GPIO::Options options, types::GPIO::IsrOptions isr_options) override;
+        virtual bool Init(const types::GPIO::Options& options) override;
+        virtual bool Configure(const types::GPIO::Options& options) override;
+        virtual bool Configure(const types::GPIO::IsrOptions& isr_options) override;
+        virtual bool Configure(const types::GPIO::Options& options, const types::GPIO::IsrOptions& isr_options) override;
 
         virtual void Set(const bool value) override;
         virtual bool Read() override;
 
         void Callback()
         {
-            if (_user_callback)
+            if (_user_callback.pcallback_object)
             {
-                _user_callback.callback_object->Interrupt(_user_callback.id);
+                _user_callback.pcallback_object->Interrupt(_user_callback.id);
+            }
+            else if (_user_callback.pevent_consumer)
+            {
+                interfaces::Event::Message msg = {.producer_id = _user_callback.id};
+                _user_callback.pevent_consumer->StoreIncomingMessage(msg);
             }
         }
 

@@ -10,12 +10,12 @@ namespace arduino
     /**************************************************************************
      *                  GPIO
      *************************************************************************/
-    bool Pin::Init(const types::GPIO::Options options)
+    bool Pin::Init(const types::GPIO::Options& options)
     {
         return Configure(options);
     }
 
-    bool Pin::Configure(const types::GPIO::Options options)
+    bool Pin::Configure(const types::GPIO::Options& options)
     {
         uint32_t a_mode;
         switch (options.direction)
@@ -51,7 +51,7 @@ namespace arduino
         return true;
     }
 
-    bool Pin::Configure(const types::GPIO::IsrOptions isr_options)
+    bool Pin::Configure(const types::GPIO::IsrOptions& isr_options)
     {
         _user_callback = isr_options;
         auto arduino_mode = RISING;
@@ -80,7 +80,7 @@ namespace arduino
         return true;
     }
 
-    bool Pin::Configure(const types::GPIO::Options options, const types::GPIO::IsrOptions isr_options)
+    bool Pin::Configure(const types::GPIO::Options& options, const types::GPIO::IsrOptions& isr_options)
     {
         Configure(options);
         Configure(isr_options);

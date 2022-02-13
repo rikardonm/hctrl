@@ -7,30 +7,26 @@
 
 #pragma once
 
-#include <general/helpers.hpp>
-#include <types/gpio/gpio.hpp>
+#include <types/bal/led/led.hpp>
+#include <types/application/periodicaction.hpp>
 
 
 class Blinky : public PeriodicAction
 {
 public:
-    Blinky(types::GPIO::Pin& pin, const uint32_t half_period)
-    : PeriodicAction(half_period), _state(false), _pin(pin)
-    {
-    }
+    Blinky(LED::LED& led, const uint32_t half_period)
+    : _led(led), PeriodicAction(half_period)
+    {}
     virtual ~Blinky() = default;
     virtual void Init() override
     {
-        _pin.Configure(types::GPIO::Direction::OutputPushPull);
     }
 protected:
     virtual void Action() override
     {
-        _pin.Set(_state);
-        _state = !_state;
+        _led.Toggle();
     }
 
 private:
-    bool _state;
-    types::GPIO::Pin& _pin;
+    LED::LED& _led;
 };
