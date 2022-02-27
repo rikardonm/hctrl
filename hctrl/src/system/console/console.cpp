@@ -27,8 +27,8 @@ const char* ascii_icon[16] = {
 namespace Console
 {
     bool IsStringEqual(
-        IOBuffer::CircularBufferCursor start,
-        const IOBuffer::CircularBufferCursor& end,
+        IOBuffer::Cursor& start,
+        const IOBuffer::Cursor& end,
         const char* test_str
     )
     {
@@ -48,27 +48,6 @@ namespace Console
         }
         while(start != end);
         return test_str[i] == '\0';
-    }
-
-    void IOBuffer::InsertNewLine()
-    {
-        *this << ASCII::ControlCodes::LineFeed << ASCII::ControlCodes::CarriageReturn;
-    }
-
-    void IOBuffer::InsertString(const char* string, bool insert_newline)
-    {
-        auto len = strlen(string);
-        if (Free() >= len)
-        {
-            for(auto i = 0; i < len; ++i)
-            {
-                _Push(*(string + i));
-            }
-        }
-        if (insert_newline)
-        {
-            InsertNewLine();
-        }
     }
 
     Console::Console(HardwareSerial& serial_block, bool verbose_codes)
@@ -117,17 +96,18 @@ namespace Console
 
     void Console::EventLoopStep(const uint32_t mils)
     {
-        auto charin = _serial.read();
-        if (charin < 0)
+        auto serial_char = _serial.read();
+        if (serial_char < 0)
         {
             FlushOutput();
             return;
         }
+        auto charin = static_cast<char>(serial_char);
         switch(charin)
         {
             case ASCII::ControlCodes::EndOfText:
                 /* CTRL+C was invoked: clear local line buffer and create new console line */
-                _input_buffer.Discard();
+                _input_buffer.GetBuffer().Discard();
                 PrintControlCode(charin);
                 PrintCloseInput();
                 break;
@@ -140,17 +120,17 @@ namespace Console
                 /* ENTER was pressed: invoke buffer parsing and processing */
                 PrintControlCode(charin);
                 ParseInputExecuteCommand();
-                _input_buffer.Discard();
+                _input_buffer.GetBuffer().Discard();
                 PrintCloseInput();
                 break;
             case ASCII::ControlCodes::Backspace:
                 /* Backspace: undo last push and echo that to console */
-                _input_buffer.RevertPush();
+                _input_buffer.GetBuffer().RevertPush();
                 _output_buffer << charin;
                 break;
             default:
                 /* Unhandled control codes + printable chars */
-                _input_buffer.Push(charin);
+                _input_buffer << charin;
                 if (ASCII::IsControlCode(charin))
                 {
                     PrintControlCode(charin);
@@ -185,13 +165,15 @@ namespace Console
 
     void Console::FlushOutput()
     {
+        /* we loop twice because it may happen that we wrap around the circ buffer
+        so, technically, hacking an implementation limitation */
         for(auto i = 0; i < 2; ++i)
         {
-            auto [write_len, write_ptr] = _output_buffer.PeekUsed();
+            auto write_len = _output_buffer.GetBuffer().PeekUsed();
             if (write_len > 0)
             {
-                _serial.write(write_ptr, write_len);
-                _output_buffer.Discard(write_len);
+                _serial.write(_output_buffer.GetBuffer().GetContiguousArray(), write_len);
+                _output_buffer.GetBuffer().Discard(write_len);
             }
         }
     }
@@ -209,7 +191,7 @@ namespace Console
 
         _output_buffer.InsertNewLine();
 
-        auto start = _input_buffer.GetCursor();
+        auto start = _input_buffer.GetBuffer().GetCursor();
         auto space_marker = start;
         space_marker.Next(space_test);
 
@@ -240,7 +222,8 @@ namespace Console
             if (not cmd.name)
             {
                 _output_buffer << "Command '";
-                _output_buffer.Push(_input_buffer, space_marker.LowerDistance());
+                // todo: fixme!
+                // _output_buffer.GetBuffer().Push(_input_buffer, space_marker.LowerDistance());
                 _output_buffer << "' is not registered.";
                 return;
             }
@@ -255,7 +238,7 @@ namespace Console
         _output_buffer << "fuck!";
     }
 
-    ReturnCode Console::Help(IOBuffer& input, IOBuffer& output)
+    types::ReturnCode Console::Help(IOBuffer& input, IOBuffer& output)
     {
         auto i = 0;
         for (const auto& opt : _options)
@@ -263,10 +246,10 @@ namespace Console
             ++i;
             _output_buffer.InsertString(opt.name, i < types::Length(_options));
         }
-        return ReturnCode::Success;
+        return types::ReturnCode::Success;
     }
 
-    ReturnCode Console::VerboseCodes(IOBuffer& input, IOBuffer& output)
+    types::ReturnCode Console::VerboseCodes(IOBuffer& input, IOBuffer& output)
     {
         /* toogle verbose */
         _verbose_codes ^= true;
@@ -280,7 +263,7 @@ namespace Console
         {
             _output_buffer << "disabled.";
         }
-        return ReturnCode::Success;
+        return types::ReturnCode::Success;
     }
 
 } /* namespace Console */

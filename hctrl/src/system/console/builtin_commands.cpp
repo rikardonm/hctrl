@@ -6,14 +6,16 @@ namespace Console
 
     const StandaloneCommand empty_command = {nullptr, nullptr};
 
-    ReturnCode Run(IOBuffer& input, IOBuffer& output)
+    types::ReturnCode Run(IOBuffer& input, IOBuffer& output)
     {
         /* Input buffer data is consumed in the operation */
-        output << "Testing!:" << input;
-        return ReturnCode::Success;
+        output << "Testing! Echo: ";
+        //  << input;
+        // todo: fixme!
+        return types::ReturnCode::Success;
     }
 
-    ReturnCode Help(IOBuffer& input, IOBuffer& output)
+    types::ReturnCode Help(IOBuffer& input, IOBuffer& output)
     {
         for (auto i = 0; ; ++i)
         {
@@ -25,13 +27,13 @@ namespace Console
             auto& next = builtin_commands[i+1];
             output.InsertString(cmd.name, next.name);
         }
-        return ReturnCode::Success;
+        return types::ReturnCode::Success;
     }
 
-    ReturnCode Reset(IOBuffer& input, IOBuffer& output)
+    types::ReturnCode Reset(IOBuffer& input, IOBuffer& output)
     {
         HAL_NVIC_SystemReset();
-        return ReturnCode::Success;
+        return types::ReturnCode::Success;
     }
 
     bool RegisterNewCommand(StandaloneCommand newcommand)

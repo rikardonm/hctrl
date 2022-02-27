@@ -4,8 +4,9 @@
 
 #include <Arduino.h>
 
+#include <types/types.hpp>
+#include <types/interfaces/string.hpp>
 #include <types/storage/circular_buffer.hpp>
-
 #include <system/console/options.hpp>
 
 
@@ -15,25 +16,36 @@ namespace Console
      * @brief
      *
      */
-    class IOBuffer : public CircularBuffer<char, Options::BufferLength, Options::CleanBuffer>
+    class IOBuffer :  public interfaces::StringStream
     {
     private:
         using _Base = CircularBuffer<char, Options::BufferLength, Options::CleanBuffer>;
+        _Base _buffer;
+
+        virtual void _InsertString(const char* const string) override
+        {
+            auto len = strlen(string);
+            if (_buffer.Free() >= len)
+            {
+                for(auto i = 0; i < len; ++i)
+                {
+                    _buffer.Push(string[i]);
+                }
+            }
+        }
+        virtual void _InsertChar(const char chr)
+        {
+            if (_buffer.Free() > 1)
+            {
+                _buffer.Push(chr);
+            }
+        }
     public:
-
-        /**
-         * @brief
-         *
-         */
-        void InsertNewLine();
-
-        /**
-         * @brief
-         *
-         * @param string
-         * @param insert_newline
-         */
-        void InsertString(const char* string, bool insert_newline = false);
+        using Cursor = _Base::CircularBufferCursor;
+        _Base& GetBuffer()
+        {
+            return _buffer;
+        }
     };
 
     /**
@@ -46,11 +58,10 @@ namespace Console
      * @return false
      */
     bool IsStringEqual(
-        IOBuffer::CircularBufferCursor start,
-        const IOBuffer::CircularBufferCursor& end,
+        IOBuffer::Cursor& start,
+        const IOBuffer::Cursor& end,
         const char* test_str
     );
-
 
     /**
      * @brief
@@ -64,19 +75,6 @@ namespace Console
         const char* name;
         FunctionPtr run;
     };
-
-
-    /**
-     * @brief
-     *
-     */
-    enum class ReturnCode
-    {
-        Success = 0x00,
-        Unknown = 0x01,
-        Timeout = 0x02,
-    };
-
 
     /**
      * @brief
@@ -160,7 +158,7 @@ namespace Console
          * @param output
          * @return ReturnCode
          */
-        ReturnCode Help(IOBuffer& input, IOBuffer& output);
+        types::ReturnCode Help(IOBuffer& input, IOBuffer& output);
 
         /**
          * @brief
@@ -169,16 +167,16 @@ namespace Console
          * @param output
          * @return ReturnCode
          */
-        ReturnCode VerboseCodes(IOBuffer& input, IOBuffer& output);
+        types::ReturnCode VerboseCodes(IOBuffer& input, IOBuffer& output);
 
-        const Command<ReturnCode (Console::*)(IOBuffer& input, IOBuffer& output)> _options[2] =
+        const Command<types::ReturnCode (Console::*)(IOBuffer& input, IOBuffer& output)> _options[2] =
         {
             {"help", &Console::Help},
             {"ccodes", &Console::VerboseCodes},
         };
     };
 
-    using StandaloneCommand = Command<ReturnCode (*)(IOBuffer& input, IOBuffer& output)>;
+    using StandaloneCommand = Command<types::ReturnCode (*)(IOBuffer& input, IOBuffer& output)>;
     extern StandaloneCommand builtin_commands[];
 
     /**

@@ -8,14 +8,15 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
+
+#include <types/interfaces/string.hpp>
 
 #include <types/bal/nokia5110/nokia5110.hpp>
 
 
 namespace dotmatrix
 {
-    class Text
+    class Text : public interfaces::StringStream
     {
     public:
         Text(Nokia5110::Nokia5110& lcd)
@@ -23,12 +24,6 @@ namespace dotmatrix
         {}
 
         bool Init();
-
-        void Char(char mychar);
-        Text& operator<<(char mychar);
-
-        void String(const char* src);
-        Text& operator<<(const char* src);
 
         /**
          * @brief Add empty spaces to end of line in LCD.
@@ -47,16 +42,6 @@ namespace dotmatrix
          */
         void Invert(bool value);
 
-        template<typename T>
-        void Number(const T number);
-        Text& operator<<(const int8_t number);
-        Text& operator<<(const uint8_t number);
-        Text& operator<<(const int16_t number);
-        Text& operator<<(const uint16_t number);
-        Text& operator<<(const int32_t number);
-        Text& operator<<(const uint32_t number);
-        Text& operator<<(const size_t number);
-
         void CharPosition(uint8_t x, uint8_t y);
 
         /**
@@ -73,14 +58,8 @@ namespace dotmatrix
         /* State variables */
         bool _initd;
         bool _invert;
+
+        virtual void _InsertString(const char* const string) override;
+        virtual void _InsertChar(const char chr) override;
     };
-
-    extern template void Text::Number(const int8_t number);
-    extern template void Text::Number(const uint8_t number);
-    extern template void Text::Number(const int16_t number);
-    extern template void Text::Number(const uint16_t number);
-    extern template void Text::Number(const int32_t number);
-    extern template void Text::Number(const uint32_t number);
-    extern template void Text::Number(const size_t number);
-
 }

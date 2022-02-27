@@ -27,6 +27,7 @@ struct ABM : protected BSP
     using BSP::red_led;
 
     static Console::Console console;
+
     static dotmatrix::Text text_out;
 
     static void Init();

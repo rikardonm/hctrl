@@ -395,6 +395,11 @@ public:
         _write_cursor = 0;
     }
 
+    const T* GetContiguousArray()
+    {
+        return &_buffer[_read_cursor.Index()];
+    }
+
     /**
      * @brief
      *
@@ -516,15 +521,15 @@ public:
     // can't really be used... as the contents are not always contiguous
     // perhaps use some sort of iterator here
     // well, it kind of can... it just needs to be called twice!!
-    std::tuple<size_t, const T*> PeekUsed()
+    size_t PeekUsed()
     {
         if (_write_cursor.Index() >= _read_cursor.Index())
         {
-            return {_write_cursor.TrailingDistance(_read_cursor), &_buffer[_read_cursor.Index()]};
+            return _write_cursor.TrailingDistance(_read_cursor);
         }
         else
         {
-            return {SIZE - _read_cursor.Index(), &_buffer[_read_cursor.Index()]};
+            return SIZE - _read_cursor.Index();
         }
     }
 

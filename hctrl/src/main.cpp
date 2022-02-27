@@ -8,6 +8,8 @@
 #include <types/storage/circular_buffer.hpp>
 #include <types/storage/fifo.hpp>
 
+#include <system/log/log.hpp>
+
 #include <fwork/base.hpp>
 
 #include <bal/user.hpp>
@@ -56,6 +58,7 @@ auto blinky = Blinky(ABM::red_led, 500);
 void setup()
 {
     ABM::Init();
+    Log::console.SetLevel(Log::Level::Trace);
     blinky.Init();
 
     // Console::RegisterNewCommand(SetFavoriteCommand);

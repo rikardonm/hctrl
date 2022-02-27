@@ -1,6 +1,6 @@
 
 #include <application/application.hpp>
-
+#include <system/log/log.hpp>
 
 bool Application::Init()
 {
@@ -21,6 +21,7 @@ bool Application::Init()
 
 void Selector::Rotation(const RotaryEncoder::Event& evt)
 {
+    Log::console.Log("Rotate!");
     // Message msg;
     // msg.type = MessageType::EncoderRotation;
     // msg.elapsed = evt.elapsed;

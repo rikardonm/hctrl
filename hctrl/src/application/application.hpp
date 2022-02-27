@@ -50,11 +50,10 @@ struct Selector : public RotaryEncoder::RotaryEncoder::ICallback
     Selector(RotaryEncoder::RotaryEncoder& encoder)
         : encoder(encoder)
     {
-        encoder;
     }
     bool Init()
     {
-        encoder.Configure(*this);
+        encoder.Configure(static_cast<RotaryEncoder::RotaryEncoder::ICallback&>(*this));
         return true;
     }
     virtual void Rotation(const RotaryEncoder::Event& msg) override;
@@ -75,6 +74,7 @@ public:
     bool Init();
 
     EventBuffer_t events;
+private:
     struct ApplicationState
     {
         uint32_t distance = 0;
