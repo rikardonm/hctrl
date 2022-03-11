@@ -59,10 +59,13 @@ jobs:
     #    and modify them (or add more) to build your code if your project
     #    uses a compiled language
     
+    # Source:
+    # https://github.com/marketplace/actions/setup-platformio
     - name: Setup pio
       uses: n-vr/setup-platformio-action@v1
     
     - name: Build pio project
+      working-directory: ./hctrl
       run: pio run
 
     #- run: |
