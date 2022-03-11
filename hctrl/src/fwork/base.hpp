@@ -13,8 +13,6 @@
 namespace fwork
 {
 
-
-
     template<typename MESSAGE_TYPES, typename OUTPUT_TYPES>
     class State
     {

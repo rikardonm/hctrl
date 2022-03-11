@@ -14,7 +14,7 @@
 #include <bal/user.hpp>
 
 #include <types/abm/dotmatrix/text.hpp>
-#include <system/console/console.hpp>
+#include <types/system/console/console.hpp>
 
 
 struct ABM : protected BSP

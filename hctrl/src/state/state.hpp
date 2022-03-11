@@ -6,7 +6,6 @@
 
 namespace state
 {
-
     // struct Vars
     // {
     //     uint32_t counter;

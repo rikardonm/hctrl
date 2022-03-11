@@ -28,10 +28,12 @@ namespace dotmatrix
             return false;
         }
         /* add blank space */
+        _lcd.Position(0, 0);
         _lcd.PushToBuffer(0x00);
-        String("Azevem!");
+        *this << "Azevem!";
         CharPosition(0, 1);
-        String("fuckOS");
+        _lcd.PushToBuffer(0x00);
+        *this << "fuckOS";
         _lcd.Flush(true);
 
         CharPosition(0, 0);
@@ -39,6 +41,7 @@ namespace dotmatrix
         {
             _lcd.PushToBuffer(Icons::Azevem::Data[i]);
         }
+        _lcd.Flush(false);
 
         _initd = true;
         return true;
@@ -46,8 +49,7 @@ namespace dotmatrix
 
     void Text::_InsertString(const char* const string)
     {
-        auto i = 0;
-        while (string[i] != '\0')
+        for(auto i = 0; string[i] != '\0'; ++i)
         {
             _InsertChar(string[i]);
         }

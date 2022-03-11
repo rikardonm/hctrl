@@ -14,6 +14,7 @@ Console::Console ABM::console(Serial1);
 void ABM::Init()
 {
     BSP::Init();
+    text_out.Init();
     // Console debug + human interaction
     console.Init(ConsoleBaudRate);
 }

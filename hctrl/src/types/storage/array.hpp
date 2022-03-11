@@ -11,12 +11,12 @@ namespace types
     struct Array
     {
         T data[SIZE];
-        std::size_t size;
+        std::size_t size = SIZE;
         void Zerofy()
         {
-            memset(data, 0x00, Bytes());
+            memset(data, 0x00, LengthBytes());
         }
-        constexpr size_t Bytes()
+        constexpr size_t LengthBytes()
         {
             return sizeof(data);
         }

@@ -15,6 +15,16 @@
 
 namespace Nokia5110
 {
+    const auto splash_screen_delay = 100;
+
+    const uint8_t azevem[Parameters::YBanks][Parameters::XPixels] = {
+        {0x00},
+        {0x00},
+        {0x00},
+        {0x00},
+        {0x00},
+        {0x00},
+    };
 
     namespace CommandCodes
     {
@@ -61,44 +71,6 @@ namespace Nokia5110
         }
     }
 
-
-    class TransactionManager
-    {
-    public:
-        TransactionManager(
-            types::GPIO::Pin& ssn,
-            types::GPIO::Pin& data_commandn,
-            bool is_data
-        ) : _ssn(ssn),
-            _data_commandn(data_commandn)
-        {
-            _ssn.Set(false);
-            if (is_data)
-            {
-                Data();
-            }
-            else
-            {
-                Command();
-            }
-        }
-        ~TransactionManager()
-        {
-            _ssn.Set(true);
-        }
-        void Data()
-        {
-            _data_commandn.Set(true);
-        }
-        void Command()
-        {
-            _data_commandn.Set(false);
-        }
-    private:
-        types::GPIO::Pin& _ssn;
-        types::GPIO::Pin& _data_commandn;
-    };
-
     Nokia5110::Nokia5110(
         types::SPI::SPI& spi,
         types::GPIO::Pin& ssn,
@@ -122,11 +94,11 @@ namespace Nokia5110
             return true;
         }
 
-        _ssn.Configure(types::GPIO::Options(types::GPIO::Direction::Input));
+        _ssn.Init(types::GPIO::Options(types::GPIO::Direction::OutputPushPull));
         _ssn.Set(true);
-        _data_commandn.Configure(types::GPIO::Options(types::GPIO::Direction::OutputPushPull));
+        _data_commandn.Init(types::GPIO::Options(types::GPIO::Direction::OutputPushPull));
         _data_commandn.Set(false);
-        _resetn.Configure(types::GPIO::Options(types::GPIO::Direction::OutputPushPull));
+        _resetn.Init(types::GPIO::Options(types::GPIO::Direction::OutputPushPull));
         _resetn.Set(false);
         delayMicroseconds(500);
         _resetn.Set(true);
@@ -140,14 +112,30 @@ namespace Nokia5110
         /* Steps as defined in Section 13 Table 6 of PCD8544 LCD controller datasheet
             https://www.sparkfun.com/datasheets/LCD/Monochrome/Nokia5110.pdf
         */
-       {
-            auto mgr = TransactionManager(_ssn, _data_commandn, false);
-            _spi.Transfer(FunctionSet(PowerDownControl::Active, AddressingMode::Horizontal, InstructionSetChoice::Extended));
-            _spi.Transfer(Vop(0x40));
-            _spi.Transfer(FunctionSet(PowerDownControl::Active, AddressingMode::Horizontal, InstructionSetChoice::Basic));
-            _spi.Transfer(DisplayControl(DisplayModes::Normal));
-            _spi.Transfer(BiasSystem(4));
-        }
+        _ssn.Set(false);
+        _data_commandn.Set(false);
+        delayMicroseconds(5);
+        _spi.Transfer(FunctionSet(
+            PowerDownControl::Active,
+            AddressingMode::Horizontal,
+            InstructionSetChoice::Extended
+        ));
+        _spi.Transfer(Vop(0x40));
+        _spi.Transfer(FunctionSet(
+            PowerDownControl::Active,
+            AddressingMode::Horizontal,
+            InstructionSetChoice::Basic
+        ));
+        _spi.Transfer(DisplayControl(DisplayModes::Normal));
+        _spi.Transfer(BiasSystem(4));
+        delayMicroseconds(5);
+        _ssn.Set(true);
+        // Fill in here
+
+
+        Flush(false);
+        /* let the splash screens sink in... */
+        delay(splash_screen_delay);
         _initd = true;
         return true;
     }
@@ -161,9 +149,10 @@ namespace Nokia5110
             cursor += Parameters::XPixels;
         }
         /* Pad to next line break */
+        uint8_t chr = _invert ? 0xFF : 0x00;
         while(_runner < cursor)
         {
-            PushToBuffer(0x00);
+            PushToBuffer(chr);
         }
     }
 
@@ -195,16 +184,18 @@ namespace Nokia5110
     {
         if (pad)
         {
-            uint8_t pad_char = _invert ? 0xFF : 0x00;
-            memset(&_buffer.data[_runner], pad_char, sizeof(_buffer) - _runner);
-            _runner = sizeof(_buffer);
+            PadLine();
         }
-        auto mgr = TransactionManager(_ssn, _data_commandn, false);
+        _ssn.Set(false);
+        _data_commandn.Set(false);
+        delayMicroseconds(5);
         _spi.Transfer(SetXAddress(0));
         _spi.Transfer(SetYAddress(0));
-        mgr.Data();
+        _data_commandn.Set(true);
         _spi.Transfer(_buffer);
-        _runner = 0;
+        delayMicroseconds(5);
+        _ssn.Set(true);
+        _runner = 0x00;
     }
 
     void Nokia5110::AdjustForTemperature(uint8_t temp_c)

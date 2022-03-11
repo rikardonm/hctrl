@@ -48,7 +48,7 @@ namespace Nokia5110
     {
         const uint32_t XPixels = 84;
         const uint32_t YPixels = 48;
-        const uint32_t YBanks = 6;
+        const uint32_t YBanks = YPixels / 8;
     }
 
     class Nokia5110
@@ -106,6 +106,11 @@ namespace Nokia5110
          * @param value Data byte to be pushed.
          */
         void PushToBuffer(const uint8_t value);
+
+        constexpr size_t GetBufferLength()
+        {
+            return _buffer.size;
+        }
 
     private:
         /* Hardware handles */

@@ -42,7 +42,7 @@ namespace interfaces
         }
         StringStream& operator<<(const char* value)
         {
-            _InsertChar(*value);
+            _InsertString(value);
             return *this;
         }
 

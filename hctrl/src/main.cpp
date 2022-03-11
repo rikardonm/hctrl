@@ -5,10 +5,11 @@
 
 #include <cstdint>
 
+#include <types/types.hpp>
 #include <types/storage/circular_buffer.hpp>
 #include <types/storage/fifo.hpp>
 
-#include <system/log/log.hpp>
+#include <types/system/log/log.hpp>
 
 #include <fwork/base.hpp>
 
@@ -19,9 +20,11 @@
 
 #include <application/application.hpp>
 
+// Testing
+#include <types/bal/nokia5110/test.hpp>
+
 
 auto lcd_backoff = TimedBackoff(50);
-const auto splash_screen_delay = 1000;
 
 auto blinky = Blinky(ABM::red_led, 500);
 
@@ -55,6 +58,33 @@ auto blinky = Blinky(ABM::red_led, 500);
 
 
 
+types::ReturnCode Test(Console::IOBuffer& input, Console::IOBuffer& output)
+{
+    // todo: parse arguments and determine which test to run
+    // input.Discard(sizeof("setf"), false);
+    // auto [success, value] = input.Pop();
+    // if (not success)
+    // {
+    //     return types::ReturnCode::InvalidArguments;
+    // }
+    BSP::lcd.Init();
+    delay(10);
+    uint8_t val = 0x00;
+    for (auto i = 0; i < 8; ++i)
+    {
+        Nokia5110::Test::FillPattern(BSP::lcd, val);
+        delay(1000);
+        val |= 0x01;
+        val << 1;
+    }
+    return types::ReturnCode::Success;
+}
+
+Console::StandaloneCommand TestHardware = {"test", Test};
+
+
+
+
 void setup()
 {
     ABM::Init();
@@ -62,12 +92,15 @@ void setup()
     blinky.Init();
 
     // Console::RegisterNewCommand(SetFavoriteCommand);
+    Console::RegisterNewCommand(TestHardware);
 
     app.Init();
 
-    /* let the splash screens sink in... */
-    // delay(splash_screen_delay);
-    // ABM::lcd.Clear();
+    BSP::lcd.Clear();
+    auto& x = ABM::text_out;
+    x.CharPosition(0, 0);
+    x << "hello fucker!";
+    x.Flush();
 }
 
 void loop()
@@ -80,9 +113,9 @@ void loop()
     // {
     //     current_state.ProcessMessage(mils, value);
     // }
-    // if (lcd_backoff.Mark(mils))
-    // {
-    //     current_state.UpdateOutput(mils, OutputTypes::Nokia5110, 0);
-    // }
-    // current_state.UpdateTick(mils);
+    if (lcd_backoff.Mark(mils))
+    {
+        current_state.UpdateOutput(mils, OutputTypes::Nokia5110, 0);
+    }
+    current_state.UpdateTick(mils);
 }

@@ -1,4 +1,6 @@
 
+#include <main.hpp>
+#include <fwork/base.hpp>
 
 // class MenuItem
 // {

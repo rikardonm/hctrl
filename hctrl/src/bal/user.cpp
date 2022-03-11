@@ -11,13 +11,13 @@
 #include <arduino.h>
 
 
-auto& lcd_ssn = platform::pin_30;               // PB10
-auto& lcd_data_command = platform::pin_0xC9;    // PB1
-auto& lcd_reset = platform::pin_31;             // PB11
+// auto& lcd_ssn = platform::pin_30;               // PB10
+// auto& lcd_data_command = platform::pin_0xC9;    // PB1
+// auto& lcd_reset = platform::pin_31;             // PB11
 
-auto& encoder_sw = platform::pin_6;             // PB3
-auto& encoder_dt = platform::pin_5;             // PB4
-auto& encoder_clk = platform::pin_7;            // PA15
+// auto& encoder_sw = platform::pin_6;             // PB3
+// auto& encoder_dt = platform::pin_5;             // PB4
+// auto& encoder_clk = platform::pin_7;            // PA15
 
 
 enum class pins : uint32_t
@@ -50,16 +50,22 @@ LED::LED BSP::red_led(platform::pin_17);                         // PC13
 types::GPIO::Pin* serial_rx = &platform::pin_10;                 // PA10
 types::GPIO::Pin* serial_tx = &platform::pin_11;                 // PA9
 
-Nokia5110::Nokia5110 BSP::lcd(platform::spi_1, lcd_ssn, lcd_data_command, lcd_reset);
+Nokia5110::Nokia5110 BSP::lcd(
+    platform::spi_1,
+    platform::pin_30,                                           // PB10
+    platform::pin_0xC9,                                         // PB1
+    platform::pin_31                                            // PB11
+);
 
-Button::Button BSP::selector_button(encoder_sw);
-RotaryEncoder::RotaryEncoder BSP::selector(encoder_dt, encoder_clk);
-
+Button::Button BSP::selector_button(platform::pin_6);           // PB3
+RotaryEncoder::RotaryEncoder BSP::selector(
+    platform::pin_5,                                            // PB4
+    platform::pin_7                                             // PA15
+);
 
 void BSP::Init()
 {
     // favorites
-    // b7
     favorite_1.Init(false, true);
     favorite_2.Init(false, true);
     favorite_3.Init(false, true);
