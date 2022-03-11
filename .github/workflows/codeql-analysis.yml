@@ -63,7 +63,7 @@ jobs:
       uses: n-vr/setup-platformio-action@v1
     
     - name: Build pio project
-      uses: pio run
+      run: pio run
 
     #- run: |
     #   make bootstrap
