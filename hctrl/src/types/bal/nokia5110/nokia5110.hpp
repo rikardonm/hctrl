@@ -48,12 +48,15 @@ namespace Nokia5110
     {
         const uint32_t XPixels = 84;
         const uint32_t YPixels = 48;
-        const uint32_t YBanks = YPixels / 8;
+        const uint32_t YPixelsPerBank = 8;
+        const uint32_t YBanks = YPixels / YPixelsPerBank;
     }
 
     class Nokia5110
     {
     public:
+        using Buffer_t = types::Array<uint8_t, Parameters::XPixels * Parameters::YBanks>;
+
         Nokia5110(
             types::SPI::SPI& spi,
             types::GPIO::Pin& ssn,
@@ -64,27 +67,10 @@ namespace Nokia5110
         bool Init();
 
         /**
-         * @brief Add empty spaces to end of line in LCD.
+         * @brief Set the cursor position in the LCD.
          *
-         * @pre
-         * @post
-         */
-        void PadLine();
-
-        /**
-         * @brief Invert pixel values when writing to LCD.
-         *
-         * @pre
-         * @post
-         * @param value Enable or disables pixel color inversion.
-         */
-        void Invert(bool value);
-
-        /**
-         * @brief Set the cursor position in the LCD
-         *
-         * @param x Coordinate from screen's left border, in pixels
-         * @param y Coordinate from screen's top border, in rows
+         * @param x Coordinate from screen's left border, in pixels.
+         * @param y Coordinate from screen's top border, in pixels.
          */
         void Position(uint8_t x, uint8_t y);
 
@@ -94,18 +80,30 @@ namespace Nokia5110
          */
         void Clear();
 
-        void Flush(bool pad);
+        /**
+         * @brief Transfer image buffer to device.
+         *
+         */
+        void Flush();
 
         void AdjustForTemperature(uint8_t temp_c);
         void AdjustForPowerMode(uint8_t power_mode);
         void AdjustForSupplyVoltage(uint8_t voltage);
 
         /**
-         * @brief Push a data byte to be flushed as text to the LCD.
+         * @brief Push a vertical cursor to display, up to 8 bits high.
          *
-         * @param value Data byte to be pushed.
+         * @param value Cursor data to be pushed.
          */
         void PushToBuffer(const uint8_t value);
+
+        /**
+         * @brief Copy buffer into image buffer.
+         *
+         * @param buf Source buffer to copy data from.
+         * @param index Starting index at destination buffer.
+         */
+        void CopyBuffer(const types::iArray<const uint8_t>& buf, uint32_t index = 0);
 
         constexpr size_t GetBufferLength()
         {
@@ -120,9 +118,9 @@ namespace Nokia5110
         types::GPIO::Pin& _data_commandn;
         /* State variables */
         bool _initd;
-        size_t _runner;
-        types::Array<uint8_t, Parameters::XPixels * Parameters::YBanks> _buffer;
-        bool _invert;
+        uint8_t _xpos;
+        uint8_t _ypos;
+        Buffer_t _buffer;
 
         /* Commands */
         constexpr uint8_t FunctionSet(PowerDownControl power_down, AddressingMode entry_mode, InstructionSetChoice instruction_set);
@@ -134,7 +132,6 @@ namespace Nokia5110
         constexpr uint8_t TemperatureControl(uint8_t value);
         constexpr uint8_t BiasSystem(uint8_t value);
         constexpr uint8_t Vop(uint8_t value);
-
     };
 
 } /* namespace Nokia5110 */

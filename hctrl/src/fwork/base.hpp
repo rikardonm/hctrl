@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <cstdint>
 
 
 namespace fwork
@@ -23,9 +24,6 @@ namespace fwork
         virtual void UpdateTick(uint32_t timestamp);
         virtual void UpdateOutput(uint32_t timestamp, OUTPUT_TYPES output_type, uint32_t output_id) = 0;
     };
-
-
-
 
     template<typename T>
     class IntegerVariable
@@ -82,11 +80,4 @@ namespace fwork
         const T _max;
     };
 
-
 }
-
-
-
-
-
-

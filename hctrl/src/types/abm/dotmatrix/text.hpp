@@ -23,25 +23,20 @@ namespace dotmatrix
             : _lcd(lcd)
         {}
 
+        /**
+         * @brief Initialize block and its dependencies.
+         *
+         * @return true If successful.
+         * @return false If any failure ocurred.
+         */
         bool Init();
 
         /**
-         * @brief Add empty spaces to end of line in LCD.
+         * @brief Set cursor write position in underlying display object.
          *
-         * @pre
-         * @post
+         * @param x Position in the X-axis, in pixels.
+         * @param y Position in the Y-axis, in pixels.
          */
-        void PadLine();
-
-        /**
-         * @brief Invert pixel values when writing to LCD.
-         *
-         * @pre
-         * @post
-         * @param value Enable or disables pixel color inversion.
-         */
-        void Invert(bool value);
-
         void CharPosition(uint8_t x, uint8_t y);
 
         /**
@@ -50,14 +45,23 @@ namespace dotmatrix
          */
         void Clear();
 
+        /**
+         * @brief Flushes the buffer in the underlying display object.
+         *
+         */
         void Flush();
+
+        /**
+         * @brief Insert a 8x8 bit Azevem icon into the current buffer location.
+         * 
+         */
+        void InsertAzevemIcon();
 
     private:
         /* Hardware handles */
         Nokia5110::Nokia5110& _lcd;
         /* State variables */
         bool _initd;
-        bool _invert;
 
         virtual void _InsertString(const char* const string) override;
         virtual void _InsertChar(const char chr) override;

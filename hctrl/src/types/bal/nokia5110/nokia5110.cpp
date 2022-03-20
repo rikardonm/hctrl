@@ -15,17 +15,6 @@
 
 namespace Nokia5110
 {
-    const auto splash_screen_delay = 100;
-
-    const uint8_t azevem[Parameters::YBanks][Parameters::XPixels] = {
-        {0x00},
-        {0x00},
-        {0x00},
-        {0x00},
-        {0x00},
-        {0x00},
-    };
-
     namespace CommandCodes
     {
         namespace FunctionSet
@@ -81,8 +70,8 @@ namespace Nokia5110
         _resetn(resetn),
         _data_commandn(data_commandn),
         _initd(false),
-        _runner(0),
-        _invert(false)
+        _xpos(0x00),
+        _ypos(0x00)
     {
         _buffer.Zerofy();
     }
@@ -130,35 +119,8 @@ namespace Nokia5110
         _spi.Transfer(BiasSystem(4));
         delayMicroseconds(5);
         _ssn.Set(true);
-        // Fill in here
-
-
-        Flush(false);
-        /* let the splash screens sink in... */
-        delay(splash_screen_delay);
         _initd = true;
         return true;
-    }
-
-    void Nokia5110::PadLine()
-    {
-        auto cursor = 0;
-        /* Find next line break */
-        while(cursor < _runner)
-        {
-            cursor += Parameters::XPixels;
-        }
-        /* Pad to next line break */
-        uint8_t chr = _invert ? 0xFF : 0x00;
-        while(_runner < cursor)
-        {
-            PushToBuffer(chr);
-        }
-    }
-
-    void Nokia5110::Invert(bool value)
-    {
-        _invert = value;
     }
 
     void Nokia5110::Position(uint8_t x, uint8_t y)
@@ -167,35 +129,34 @@ namespace Nokia5110
         {
             x = Parameters::XPixels;
         }
-        if (y > Parameters::YBanks)
+        if (y > Parameters::YPixels)
         {
-            y = Parameters::YBanks;
+            y = Parameters::YPixels;
         }
-        _runner = (Parameters::XPixels * y) + x;
+        _xpos = x;
+        _ypos = y;
     }
 
     void Nokia5110::Clear()
     {
         _buffer.Zerofy();
-        _runner = 0x00;
+        _xpos = 0x00;
+        _ypos = 0x00;
     }
 
-    void Nokia5110::Flush(bool pad)
+    void Nokia5110::Flush()
     {
-        if (pad)
-        {
-            PadLine();
-        }
         _ssn.Set(false);
         _data_commandn.Set(false);
         delayMicroseconds(5);
         _spi.Transfer(SetXAddress(0));
         _spi.Transfer(SetYAddress(0));
         _data_commandn.Set(true);
-        _spi.Transfer(_buffer);
+        _spi.Transfer(types::iArray<uint8_t>(_buffer));
         delayMicroseconds(5);
         _ssn.Set(true);
-        _runner = 0x00;
+        _xpos = 0x00;
+        _ypos = 0x00;
     }
 
     void Nokia5110::AdjustForTemperature(uint8_t temp_c)
@@ -262,18 +223,33 @@ namespace Nokia5110
 
     void Nokia5110::PushToBuffer(const uint8_t value)
     {
-        if (_runner < sizeof(_buffer))
+        const uint8_t mod = _ypos & (0x07);
+        /* https://blog.regehr.org/archives/1063 */
+        auto _yypos = (_ypos / 0x08) * Parameters::XPixels;
+        auto idx = _yypos + _xpos;
+        if (idx > _buffer.size)
         {
-            if (_invert)
-            {
-                _buffer.data[_runner] = ~value;
-            }
-            else
-            {
-                _buffer.data[_runner] = value;
-            }
-            ++_runner;
+            idx = _buffer.size;
         }
+        _buffer.data[idx] |= value << mod;
+        idx += Parameters::XPixels;
+        if (idx > _buffer.size)
+        {
+            idx = _buffer.size;
+        }
+        _buffer.data[idx] |= (value >> (0x08 - mod));
+        ++_xpos;
+        if (_xpos >= Parameters::XPixels)
+        {
+            _xpos = Parameters::XPixels;
+        }
+    }
+
+    void Nokia5110::CopyBuffer(const types::iArray<const uint8_t>& buf, uint32_t index)
+    {
+        memcpy(&_buffer.data[index], buf.data, buf.size);
+        _xpos = 0x00;
+        _ypos = 0x00;
     }
 
 } /* namespace Nokia5110 */

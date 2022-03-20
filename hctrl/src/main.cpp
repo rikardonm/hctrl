@@ -16,17 +16,16 @@
 #include <bal/user.hpp>
 #include <abm/abm.hpp>
 
-#include "blinky.hpp"
-
 #include <application/application.hpp>
 
-// Testing
-#include <types/bal/nokia5110/test.hpp>
+
+#include "blinky.hpp"
 
 
 auto lcd_backoff = TimedBackoff(50);
 
 auto blinky = Blinky(ABM::red_led, 500);
+const auto splash_screen_delay = 3000;
 
 
 // Console::ReturnCode SetFavorite(Console::IOBuffer& input, Console::IOBuffer& output)
@@ -58,50 +57,24 @@ auto blinky = Blinky(ABM::red_led, 500);
 
 
 
-types::ReturnCode Test(Console::IOBuffer& input, Console::IOBuffer& output)
-{
-    // todo: parse arguments and determine which test to run
-    // input.Discard(sizeof("setf"), false);
-    // auto [success, value] = input.Pop();
-    // if (not success)
-    // {
-    //     return types::ReturnCode::InvalidArguments;
-    // }
-    BSP::lcd.Init();
-    delay(10);
-    uint8_t val = 0x00;
-    for (auto i = 0; i < 8; ++i)
-    {
-        Nokia5110::Test::FillPattern(BSP::lcd, val);
-        delay(1000);
-        val |= 0x01;
-        val << 1;
-    }
-    return types::ReturnCode::Success;
-}
-
-Console::StandaloneCommand TestHardware = {"test", Test};
-
-
-
 
 void setup()
 {
     ABM::Init();
+    /* let the splash screens sink in... */
+    delay(splash_screen_delay);
+
     Log::console.SetLevel(Log::Level::Trace);
     blinky.Init();
 
     // Console::RegisterNewCommand(SetFavoriteCommand);
-    Console::RegisterNewCommand(TestHardware);
-
     app.Init();
 
     BSP::lcd.Clear();
-    auto& x = ABM::text_out;
-    x.CharPosition(0, 0);
-    x << "hello fucker!";
-    x.Flush();
+    BSP::lcd.Flush();
 }
+
+
 
 void loop()
 {
@@ -113,9 +86,9 @@ void loop()
     // {
     //     current_state.ProcessMessage(mils, value);
     // }
-    if (lcd_backoff.Mark(mils))
-    {
-        current_state.UpdateOutput(mils, OutputTypes::Nokia5110, 0);
-    }
-    current_state.UpdateTick(mils);
+    // if (lcd_backoff.Mark(mils))
+    // {
+    //     current_state.UpdateOutput(mils, OutputTypes::Nokia5110, 0);
+    // }
+    // current_state.UpdateTick(mils);
 }

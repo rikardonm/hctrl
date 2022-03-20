@@ -3,7 +3,7 @@
 #include <cstring>
 #include <cstdlib>
 
-#include <general/ascii.hpp>
+#include <types/general/ascii.hpp>
 
 
 namespace interfaces

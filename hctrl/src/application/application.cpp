@@ -1,6 +1,6 @@
 
 #include <application/application.hpp>
-#include <system/log/log.hpp>
+#include <types/system/log/log.hpp>
 
 bool Application::Init()
 {
